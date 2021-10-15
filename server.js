@@ -6,6 +6,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const weather = require('./data/weather.json');
+const { default: axios } = require('axios');
 
 //initialize express. Need a variable to hold and call express to do the chaining method
 const app = express();
@@ -22,21 +23,25 @@ app.get('/',(request, response)=>{
   response.status(200).send('Yay!');
 });
 
-app.get('/weather',(request,response) => {
+app.get('/weather', async (request,response) => {
   let lon = request.query.lon;
   let lat = request.query.lat;
   let searchQuery = request.query.searchQuery;
   // console.log(request.query);
-  const city = weather.find(city => city.city_name === searchQuery);
-  try{
-    let weatherData = city.data.map(day => new Forecast(day))
+
+  try {
+    const weatherUrl = `https://api.weatherbit.io/v2.0/forecast/daily?&lat=${lat}&lon=${lon}&key=${process.env.WEATHER_API_KEY}`;
+    console.log(weatherUrl)
+    const weatherInfo = await axios.get(weatherUrl);
+    console.log(weatherInfo.data)
+    let weatherData = weatherInfo.data.data.map(day => new Forecast(day));
     response.status(200).send(weatherData);
-  } catch(error){
+  } catch(error) {
     response.status(500).send('And I oop! City not found')
   }
 });
 
-function Forecast(day) {    //<----similar to class liek in the front end
+function Forecast(day) {    //<----similar to class like in the front end
   this.date = day.valid_date,
   this.description = day.weather.description
 } 
