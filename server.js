@@ -19,11 +19,11 @@ const PORT = process.env.PORT;
 
 //Building route in express
 // get is a function that takes in two paramenters. takes in path/route and another callback function that takes in (req*front-end*,res*back-end*)
-app.get('/',(request, response)=>{
+app.get('/', (request, response) => {
   response.status(200).send('Yay!');
 });
 
-app.get('/weather', async (request,response) => {
+app.get('/weather', async (request, response) => {
   let lon = request.query.lon;
   let lat = request.query.lat;
   let searchQuery = request.query.searchQuery;
@@ -36,15 +36,15 @@ app.get('/weather', async (request,response) => {
     console.log(weatherInfo.data)
     let weatherData = weatherInfo.data.data.map(day => new Forecast(day));
     response.status(200).send(weatherData);
-  } catch(error) {
+  } catch (error) {
     response.status(500).send('And I oop! City not found')
   }
 });
 
 function Forecast(day) {    //<----similar to class like in the front end
   this.date = day.valid_date,
-  this.description = day.weather.description
-} 
+    this.description = day.weather.description
+}
 
 // class Forecast {
 //   constructor(day) {
@@ -53,8 +53,30 @@ function Forecast(day) {    //<----similar to class like in the front end
 //   } 
 // }
 
+app.get('/movies', async (request, response) => {
+  const citySearch = request.query.searchQuery
+
+  try {
+    const movieUrl = `https://api.themoviedb.org/3/search/movie?api_key=${process.env.MOVIE_API_KEY}&query=${citySearch}`;
+    console.log(movieUrl)
+    const movieInfo = await axios.get(movieUrl);
+    console.log(movieInfo.data)
+    let movieData = movieInfo.data.results.map(movie => new Movies(movie));
+    response.status(200).send(movieData);
+  } catch (error) {
+    response.status(500).send('And I oop! City not found')
+  }
+})
+
+function Movies(movie) {
+    this.title = movie.title
+    this.image = `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+    this.overview = movie.overview
+}
+
+
 //need to run a listen function that comes with express. takes in PORT and callback function. callback function is to console log that PORT is up and runing
-app.listen(PORT,() => console.log(` server is up on ${PORT}`) ); //<---ALWAYS had to be the very last line of code. Anything out of order wont work bc this listener has to listen for everything above it
+app.listen(PORT, () => console.log(` server is up on ${PORT}`)); //<---ALWAYS had to be the very last line of code. Anything out of order wont work bc this listener has to listen for everything above it
 
 //^^This is kind of what you need to start your server
 //node server.js in terminal to start
