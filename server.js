@@ -7,6 +7,8 @@ const express = require('express');
 const cors = require('cors');
 const weather = require('./data/weather.json');
 const { default: axios } = require('axios');
+const getWeather = require('./weather');
+const getMovies = require('./movies')
 
 //initialize express. Need a variable to hold and call express to do the chaining method
 const app = express();
@@ -23,28 +25,7 @@ app.get('/', (request, response) => {
   response.status(200).send('Yay!');
 });
 
-app.get('/weather', async (request, response) => {
-  let lon = request.query.lon;
-  let lat = request.query.lat;
-  let searchQuery = request.query.searchQuery;
-  // console.log(request.query);
-
-  try {
-    const weatherUrl = `https://api.weatherbit.io/v2.0/forecast/daily?&lat=${lat}&lon=${lon}&key=${process.env.WEATHER_API_KEY}`;
-    console.log(weatherUrl)
-    const weatherInfo = await axios.get(weatherUrl);
-    console.log(weatherInfo.data)
-    let weatherData = weatherInfo.data.data.map(day => new Forecast(day));
-    response.status(200).send(weatherData);
-  } catch (error) {
-    response.status(500).send('And I oop! City not found')
-  }
-});
-
-function Forecast(day) {    //<----similar to class like in the front end
-  this.date = day.valid_date,
-    this.description = day.weather.description
-}
+app.get('/weather',getWeather)
 
 // class Forecast {
 //   constructor(day) {
@@ -53,26 +34,7 @@ function Forecast(day) {    //<----similar to class like in the front end
 //   } 
 // }
 
-app.get('/movies', async (request, response) => {
-  const citySearch = request.query.searchQuery
-
-  try {
-    const movieUrl = `https://api.themoviedb.org/3/search/movie?api_key=${process.env.MOVIE_API_KEY}&query=${citySearch}`;
-    console.log(movieUrl)
-    const movieInfo = await axios.get(movieUrl);
-    console.log(movieInfo.data)
-    let movieData = movieInfo.data.results.map(movie => new Movies(movie));
-    response.status(200).send(movieData);
-  } catch (error) {
-    response.status(500).send('And I oop! City not found')
-  }
-})
-
-function Movies(movie) {
-    this.title = movie.title
-    this.image = `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-    this.overview = movie.overview
-}
+app.get('/movies', getMovies)
 
 
 //need to run a listen function that comes with express. takes in PORT and callback function. callback function is to console log that PORT is up and runing
